@@ -218,29 +218,3 @@
     </script>
 </body>
 </html>
-                .split(',')
-                .map(p => parseInt(p.trim()) - 1)
-                .filter(p => !isNaN(p) && p >= 0 && p < pdfDoc.getPageCount())
-                .sort((a, b) => b - a);
-
-            if (pagesToDelete.length === 0) {
-                alert('Vui lòng nhập số trang hợp lệ!');
-                return;
-            }
-
-            // 4. Tiến hành xóa trang
-            pagesToDelete.forEach(pageIndex => {
-                pdfDoc.removePage(pageIndex);
-            });
-
-            // 5. Lưu lại và tạo link download
-            const pdfBytes = await pdfDoc.save();
-            const blob = new Blob([pdfBytes], { type: "application/pdf" });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `edited_${file.name}`;
-            link.click();
-        }
-    </script>
-</body>
-</html>
