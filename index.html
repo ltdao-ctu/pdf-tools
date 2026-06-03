@@ -2,20 +2,163 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Xóa trang PDF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xóa Trang PDF Trực Tuyến</title>
+    
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-color: #1f2937;
+            --text-muted: #4b5563;
+            --border-color: #d1d5db;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 480px; /* Giới hạn chiều rộng trên máy tính */
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 24px;
+            color: #111827;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Custom lại input file nhìn hiện đại hơn */
+        input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            background-color: #f9fafb;
+            font-size: 0.9rem;
+        }
+
+        input[type="file"]:hover {
+            border-color: var(--primary-color);
+        }
+
+        /* Input text cho smartphone (nút bấm to, dễ gõ) */
+        input[type="text"] {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s ease;
+            -webkit-appearance: none; /* Khử style mặc định trên iOS */
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.14);
+        }
+
+        .note {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        /* Button tối ưu hóa cho cảm ứng (Touch Target tối thiểu 44px) */
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+            -webkit-tap-highlight-color: transparent; /* Khử highlight khi chạm trên mobile */
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        /* Tối ưu nhỏ hơn cho các màn hình smartphone cực nhỏ (e.g. iPhone SE đời cũ) */
+        @media (max-width: 360px) {
+            .container {
+                padding: 16px;
+            }
+            h2 {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h2>Ứng dụng xóa trang PDF</h2>
-    <input type="file" id="pdf-input" accept=".pdf"><br><br>
-    
-    <label for="pages-to-delete">Các trang cần xóa (cách nhau bằng dấu phẩy, ví dụ: 1,3,5):</label><br>
-    <input type="text" id="pages-to-delete" placeholder="e.g. 1, 3"><br><br>
-    
-    <button onclick="processPdf()">Xóa trang và Tải về</button>
+
+    <div class="container">
+        <h2>Xóa Trang PDF</h2>
+        
+        <div class="form-group">
+            <label for="pdf-input">Chọn file PDF của bạn</label>
+            <input type="file" id="pdf-input" accept=".pdf">
+        </div>
+        
+        <div class="form-group">
+            <label for="pages-to-delete">Các trang cần xóa</label>
+            <input type="text" id="pages-to-delete" placeholder="Ví dụ: 1, 3, 5">
+            <p class="note">Nhập số trang cách nhau bằng dấu phẩy</p>
+        </div>
+        
+        <button onclick="processPdf()">Xóa trang & Tải về</button>
+    </div>
 
     <script>
-        async join processPdf() {
+        async function processPdf() {
             const fileInput = document.getElementById('pdf-input');
             const pagesInput = document.getElementById('pages-to-delete');
             
@@ -24,16 +167,57 @@
                 return;
             }
 
-            // 1. Đọc file PDF thành ArrayBuffer
             const file = fileInput.files[0];
             const fileArrayBuffer = await file.arrayBuffer();
 
-            // 2. Load file vào pdf-lib
-            const pdfDoc = await PDFLib.PDFDocument.load(fileArrayBuffer);
-            
-            // 3. Xử lý mảng các trang cần xóa (Chuyển sang 0-indexed và sắp xếp giảm dần)
-            // Cần sắp xếp giảm dần để khi xóa không bị lệch index của các trang phía sau
-            const pagesToDelete = pagesInput.value
+            try {
+                // Load file vào pdf-lib
+                const pdfDoc = await PDFLib.PDFDocument.load(fileArrayBuffer);
+                const totalPages = pdfDoc.getPageCount();
+                
+                // Xử lý chuỗi input, chuyển về dạng số hệ 0-indexed và lọc bỏ ký tự lạ
+                const pagesToDelete = pagesInput.value
+                    .split(',')
+                    .map(p => parseInt(p.trim()) - 1)
+                    .filter(p => !isNaN(p) && p >= 0 && p < totalPages)
+                    .sort((a, b) => b - a); // Sắp xếp giảm dần để tránh lệch index khi xóa
+
+                if (pagesToDelete.length === 0) {
+                    alert('Vui lòng nhập số trang hợp lệ hợp lệ (Từ 1 đến ' + totalPages + ')');
+                    return;
+                }
+
+                // Tiến hành xóa
+                pagesToDelete.forEach(pageIndex => {
+                    pdfDoc.removePage(pageIndex);
+                });
+
+                // Kiểm tra nếu xóa hết sạch trang của file
+                if (pdfDoc.getPageCount() === 0) {
+                    alert('Không thể xóa hết toàn bộ các trang của file PDF!');
+                    return;
+                }
+
+                // Xuất file mới
+                const pdfBytes = await pdfDoc.save();
+                const blob = new Blob([pdfBytes], { type: "application/pdf" });
+                
+                // Trình kích hoạt tải file về (hoạt động tốt cả trên Safari/Chrome của iOS & Android)
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `da_xoa_${file.name}`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+            } catch (error) {
+                alert('Có lỗi xảy ra khi xử lý file PDF này. Vui lòng thử lại.');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
                 .split(',')
                 .map(p => parseInt(p.trim()) - 1)
                 .filter(p => !isNaN(p) && p >= 0 && p < pdfDoc.getPageCount())
